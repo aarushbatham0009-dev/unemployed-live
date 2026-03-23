@@ -6,24 +6,25 @@ app = Flask(__name__)
 def get_club_members():
     url = "https://api.chess.com/pub/club/da-unemployed/members"
     
-    # Apni pehchan (User-Agent) ko thoda unique banate hain
+    # Bilkul fresh aur real-looking headers
     headers = {
-        'User-Agent': 'ChessClubDisplay/1.0 (Contact: aarushbatham0009@gmail.com)',
-        'Accept': 'application/json'
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
     }
     
+    session = requests.Session()
     try:
-        # 20 seconds ka timeout taaki slow connection par bhi data aaye
-        r = requests.get(url, headers=headers, timeout=20)
-        if r.status_code == 200:
-            data = r.json()
-            # Sabse naye members 'all_time' mein hote hain
-            members_list = data.get('all_time', [])
-            if members_list:
-                # Last 3 members ke usernames
-                return [m['username'] for m in members_list[-3:][::-1]]
+        # 30 seconds ka heavy timeout
+        response = session.get(url, headers=headers, timeout=30)
+        if response.status_code == 200:
+            data = response.json()
+            # Sabse naye members ko nikalna
+            res = data.get('all_time', [])
+            if res:
+                return [m['username'] for m in res[-3:][::-1]]
         return []
-    except:
+    except Exception as e:
         return []
 
 @app.route('/')
@@ -37,8 +38,8 @@ def main():
         <text x="50%" y="30" text-anchor="middle" font-family="Georgia, serif" font-size="14" font-weight="bold" fill="#3d0000">⚜️ NEW UNEMPLOYED ⚜️</text>'''
 
     if not members:
-        # Agar abhi bhi nahi aa raha toh humein pata chal jayega
-        svg += '<text x="50%" y="130" text-anchor="middle" font-family="Georgia" font-size="12" fill="#ffdab9">Connecting to Chess.com...</text>'
+        # Agar ye dikhe, matlab Chess.com ne Vercel ko 100% block kiya hai
+        svg += '<text x="50%" y="130" text-anchor="middle" font-family="Georgia" font-size="12" fill="#ffdab9">Server Blocked by Chess.com</text>'
     else:
         for i, name in enumerate(members):
             y = 65 + (i * 50)
