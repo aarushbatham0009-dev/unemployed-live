@@ -4,25 +4,24 @@ import requests
 app = Flask(__name__)
 
 def get_club_members():
-    # Official API URL
     url = "https://api.chess.com/pub/club/da-unemployed/members"
     
-    # Ye headers Chess.com ko 100% real lagenge
+    # Apni pehchan (User-Agent) ko thoda unique banate hain
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'User-Agent': 'ChessClubDisplay/1.0 (Contact: aarushbatham0009@gmail.com)',
         'Accept': 'application/json'
     }
     
     try:
-        r = requests.get(url, headers=headers, timeout=15)
+        # 20 seconds ka timeout taaki slow connection par bhi data aaye
+        r = requests.get(url, headers=headers, timeout=20)
         if r.status_code == 200:
             data = r.json()
             # Sabse naye members 'all_time' mein hote hain
             members_list = data.get('all_time', [])
             if members_list:
-                # Sirf usernames ki list banate hain (Last 3)
-                names = [m['username'] for m in members_list[-3:][::-1]]
-                return names
+                # Last 3 members ke usernames
+                return [m['username'] for m in members_list[-3:][::-1]]
         return []
     except:
         return []
@@ -32,15 +31,14 @@ def get_club_members():
 def main():
     members = get_club_members()
     
-    # SVG Style
     svg = f'''<svg width="260" height="230" viewBox="0 0 260 230" xmlns="http://www.w3.org/2000/svg">
         <rect width="256" height="226" x="2" y="2" rx="12" fill="#3d0000" stroke="#ffdab9" stroke-width="3"/>
         <rect width="260" height="45" rx="0" fill="#ffdab9"/>
         <text x="50%" y="30" text-anchor="middle" font-family="Georgia, serif" font-size="14" font-weight="bold" fill="#3d0000">⚜️ NEW UNEMPLOYED ⚜️</text>'''
 
-    # Agar data nahi mila toh error message (par 'New_Member' nahi)
     if not members:
-         svg += '<text x="50%" y="130" text-anchor="middle" font-family="Georgia" font-size="12" fill="#ffdab9">Updating Live Feed...</text>'
+        # Agar abhi bhi nahi aa raha toh humein pata chal jayega
+        svg += '<text x="50%" y="130" text-anchor="middle" font-family="Georgia" font-size="12" fill="#ffdab9">Connecting to Chess.com...</text>'
     else:
         for i, name in enumerate(members):
             y = 65 + (i * 50)
